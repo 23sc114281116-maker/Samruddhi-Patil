@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Builder</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        h1, h2 {
+            color: #d63384;
+        }
+
+        input, textarea {
+            display: block;
+            margin: 10px auto;
+            padding: 8px;
+            width: 250px;
+            border: 2px solid #ff69b4;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            background: #ff69b4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #ff1493;
+        }
+
+        .card {
+            background: #fff0f5;
+            padding: 20px;
+            margin: 20px auto;
+            width: 300px;
+            box-shadow: 0 0 15px rgba(255, 105, 180, 0.5);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HOME PAGE -->
+<div id="home" class="page active">
+    <h1> Quiz Builder</h1>
+    <p>Create and manage quizzes easily</p>
+
+    <button onclick="showPage('login')">Login</button>
+    <button onclick="showPage('create')">Create Quiz</button>
+</div>
+
+<!-- LOGIN PAGE -->
+<div id="login" class="page">
+    <div class="card">
+        <h2>Login</h2>
+        <input type="email" placeholder="Enter Email">
+        <input type="password" placeholder="Enter Password">
+        <button onclick="login()">Login</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page">
+    <h2>Welcome to Dashboard</h2>
+    <button onclick="showPage('create')">Create Quiz</button>
+    <button onclick="loadQuiz()">Take Quiz</button>
+    <button onclick="showPage('home')">Logout</button>
+</div>
+
+<!-- CREATE QUIZ -->
+<div id="create" class="page">
+    <h2>Create Quiz</h2>
+
+    <textarea placeholder="Enter Instructions"></textarea>
+
+    <div id="questions">
+        <div class="card">
+            <input type="text" placeholder="Enter Question">
+            <input type="text" placeholder="Option A">
+            <input type="text" placeholder="Option B">
+            <input type="text" placeholder="Option C">
+            <input type="text" placeholder="Option D">
+            <input type="text" placeholder="Correct Answer">
+        </div>
+    </div>
+
+    <button onclick="addQuestion()">Add Question</button>
+    <button onclick="saveQuiz()">Save Quiz</button>
+    <button onclick="showPage('dashboard')">Back</button>
+</div>
+<div id="takeQuiz" class="page">
+    <h2>Take Quiz</h2>
+    <div id="quizContainer"></div>
+    <button onclick="submitQuiz()">Submit Answers</button>
+    <button onclick="showPage('dashboard')">Back</button>
+</div>
+<script>
+    function showPage(pageId) {
+        let pages = document.querySelectorAll(".page");
+        pages.forEach(p => p.classList.remove("active"));
+
+        document.getElementById(pageId).classList.add("active");
+    }
+
+    function login() {
+        alert("Login Successful!");
+        showPage("dashboard");
+    }
+
+    function addQuestion() {
+        let container = document.getElementById("questions");
+
+        let newQ = document.createElement("div");
+        newQ.classList.add("card");
+
+        newQ.innerHTML = `
+            <input type="text" placeholder="Enter Question">
+            <input type="text" placeholder="Option A">
+            <input type="text" placeholder="Option B">
+            <input type="text" placeholder="Option C">
+            <input type="text" placeholder="Option D">
+            <input type="text" placeholder="Correct Answer">
+        `;
+
+        container.appendChild(newQ);
+    }
+
+    function saveQuiz() {
+         console.log("Save Quiz clicked"); 
+        
+        
+    let questions = [];
+
+    let questionCards = document.querySelectorAll("#questions .card");
+
+    questionCards.forEach(card => {
+        let inputs = card.querySelectorAll("input");
+
+        let question = inputs[0].value;
+        let option1 = inputs[1].value;
+        let option2 = inputs[2].value;
+        let option3 = inputs[3].value;
+        let option4 = inputs[4].value;
+        let answer = inputs[5].value;
+
+        if (question.trim() !== "") {
+            questions.push({
+                question: question,
+                options: [option1, option2, option3, option4],
+                answer: answer
+            });
+        }
+    });
+
+    fetch("http://localhost:3000/saveQuiz", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(questions)
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(err => {
+        alert("Error: Backend not running!");
+        console.log(err);
+    });
+}
+function loadQuiz() {
+    fetch("http://localhost:3000/getQuiz")
+    .then(res => res.json())
+    .then(data => {
+        let container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        data.forEach((q, index) => {
+            let div = document.createElement("div");
+
+            div.innerHTML = `
+                <p>${q.question}</p>
+                ${q.options.map(opt => `
+                    <label>
+                        <input type="radio" name="q${index}" value="${opt}">
+                        ${opt}
+                    </label><br>
+                `).join("")}
+            `;
+
+            container.appendChild(div);
+        });
+
+        showPage("takeQuiz");
+    });
+}
+function submitQuiz() {
+    fetch("http://localhost:3000/getQuiz")
+    .then(res => res.json())
+    .then(data => {
+        let score = 0;
+
+        data.forEach((q, index) => {
+            let selected = document.querySelector(`input[name="q${index}"]:checked`);
+
+            if (selected && selected.value === q.answer) {
+                score++;
+            }
+        });
+
+        alert("Your Score: " + score);
+    });
+}
+
+</script>
+
+</body>
+</html>
+```

@@ -1,0 +1,22 @@
+[
+  {
+    "question": "How many planets are there in solar system",
+    "options": [
+      "5",
+      "8",
+      "10",
+      "4"
+    ],
+    "answer": "8"
+  },
+  {
+    "question": "Largest bone in human body",
+    "options": [
+      "Femur",
+      "Metacarpel",
+      "Humerus",
+      "Hyoid"
+    ],
+    "answer": "Femur"
+  }
+]
